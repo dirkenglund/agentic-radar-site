@@ -21,51 +21,31 @@
   <div class="wrap">
     <div class="mermaid">
 flowchart LR
-  %% Control loop blocks styled as control-theory boxes
-  classDef block fill:#f9f9f9,stroke:#333,stroke-width:2px,color:#111
-  classDef summing fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#111
-  classDef signal fill:#fff,stroke:#999,stroke-dasharray: 5 3,color:#333
-  classDef store fill:#eef7ff,stroke:#1565c0,stroke-width:2px,color:#111
+  %% Minimal, version-compatible syntax
+  R(["r(t) Reference"]) 
+  E(("Σ"))
+  U(["u(t)"])
+  Y(["y(t)"])
+  N(["n(t) disturbances"]) 
 
-  %% Signals
-  R([r(t) Reference]):::signal
-  E((Σ)):::summing
-  U([u(t)]):::signal
-  Y([y(t)]):::signal
-  N([n(t) disturbances]):::signal
-
-  %% Controller encapsulating Axiomatic tools as sub-blocks
-  subgraph CONTROLLER[Controller C(s)]
+  subgraph CONTROLLER["Controller C(s)"]
     direction TB
-    DMD["Documents: document_to_markdown(file_path)"]:::block
-    EQS["Equations: compose_expression(task)"]:::block
-    PLT["Plots: extract_numerical_series_points(plot_path)"]:::block
-    PIC["PIC: design_circuit(query, constraints)"]:::block
+    DMD["Documents: document_to_markdown(file_path)"]
+    EQS["Equations: compose_expression(task)"]
+    PLT["Plots: extract_numerical_series_points(plot_path)"]
+    PIC["PIC: design_circuit(query, constraints)"]
   end
-  class CONTROLLER block
 
-  %% Plant and Sensor
-  PLANT["Photonic Plant P(s): simulate_circuit(file, λ, noise)"]:::block
-  SENS["Sensor / Extractor: compute H_ψ, fit T(ω)"]:::block
+  PLANT["Photonic Plant P(s): simulate_circuit(file, λ, noise)"]
+  SENS["Sensor / Extractor: compute H_ψ, fit T(ω)"]
+  STORE[("Neo4j Provenance")]
 
-  %% Data store / provenance
-  STORE[(Neo4j Provenance)]:::store
-
-  %% Forward path
   R --> E
-  Y -. negative feedback .- E
-  E -->|e(t)| CONTROLLER -->|u(t)| U --> PLANT --> SENS -->|y(t)| Y
+  Y -.-> E
+  E -->|"e(t)"| CONTROLLER -->|"u(t)"| U --> PLANT --> SENS -->|"y(t)"| Y
   N -.-> PLANT
-
-  %% Logging and storage
-  CONTROLLER -. log tools .-> STORE
-  SENS -. write metrics .-> STORE
-
-  %% Inputs/Outputs annotations
-  E:::summing
-  
-  %% Styling of key interfaces
-  linkStyle default stroke:#666,stroke-width:2px
+  CONTROLLER -.-> STORE
+  SENS -.-> STORE
     </div>
     <p class="note">Blocks show Axiomatic MCP calls and control-loop structure. Summing junction E computes e(t)=r(t)-y(t). Negative feedback indicated by dashed line.</p>
   </div>
