@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Photonic Pipeline - Clean UML Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: normal;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #333;
+            padding: 30px;
+        }
+        
+        .workflow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+        
+        .stage {
+            flex: 1;
+            max-width: 180px;
+            margin: 0 10px;
+            position: relative;
+        }
+        
+        .node {
+            background: #f9f9f9;
+            border: 2px solid #666;
+            padding: 15px 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            text-align: center;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .node:hover {
+            background: #e8e8e8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .node.active {
+            background: #f0f0f0;
+            border-color: #4caf50;
+            border-width: 3px;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+        
+        .node.active .arrow {
+            background: #4caf50;
+        }
+        
+        .node.active .arrow::after {
+            border-left-color: #4caf50;
+        }
+        
+        .node-title {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .node-time {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .node-status {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+        
+        .status-pending { background: #999; }
+        .status-running { 
+            background: #4caf50; 
+            animation: pulse 1s infinite;
+        }
+        .status-success { background: #666; }
+        .status-error { background: #333; }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(76, 175, 80, 0); }
+        }
+        
+        .arrow {
+            position: absolute;
+            top: 50%;
+            right: -25px;
+            width: 25px;
+            height: 2px;
+            background: #666;
+            z-index: 1;
+            transition: background 0.3s;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #666;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            transition: border-left-color 0.3s;
+        }
+        
+        .detail-panel {
+            background: #fafafa;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .detail-panel.active {
+            display: block;
+            border: 2px solid #4caf50;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .detail-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4caf50;
+            padding-bottom: 10px;
+        }
+        
+        .detail-section {
+            margin-bottom: 15px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .detail-content {
+            background: white;
+            padding: 10px;
+            font-size: 14px;
+            border-left: 3px solid #999;
+        }
+        
+        .visualization-panel {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+        }
+        
+        .metric {
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            transition: color 0.5s;
+        }
+        
+        .metric-value.success {
+            color: #4caf50;
+        }
+        
+        .metric-value.error {
+            color: #666;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .feedback-loop {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 25px;
+            border: 2px dashed #999;
+            border-top: none;
+            border-radius: 0 0 50% 50%;
+        }
+        
+        .feedback-label {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #999;
+            white-space: nowrap;
+        }
+        
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 0;
+            margin: 30px 0;
+            border-top: 2px solid #666;
+            position: relative;
+        }
+        
+        .timeline-item {
+            position: relative;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .timeline-marker {
+            width: 10px;
+            height: 10px;
+            background: #999;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            position: relative;
+            top: -30px;
+            border: 2px solid #fff;
+        }
+        
+        .timeline-marker.active {
+            background: #4caf50;
+            width: 14px;
+            height: 14px;
+            top: -32px;
+        }
+        
+        .timeline-label {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .control-panel {
+            background: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            border: 1px solid #ccc;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            background: #666;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #555;
+        }
+        
+        .btn.primary {
+            background: #333;
+        }
+        
+        .btn.primary:hover {
+            background: #222;
+        }
+        
+        .annotation {
+            position: absolute;
+            background: #f9f9f9;
+            border: 1px dashed #999;
+            padding: 6px;
+            font-size: 10px;
+            z-index: 10;
+            max-width: 140px;
+            color: #666;
+        }
+        
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* UML-style node shapes */
+        .node.uml-start {
+            border-radius: 20px;
+        }
+        
+        .node.uml-decision {
+            transform: rotate(45deg);
+            width: 60px;
+            height: 60px;
+        }
+        
+        .node.uml-decision .node-title,
+        .node.uml-decision .node-time {
+            transform: rotate(-45deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PHOTONIC DESIGN OPTIMIZATION PIPELINE - FEEDBACK CONTROL SYSTEM</h1>
+        
+        <div class="control-panel">
+            <button class="btn primary" onclick="runSimulation()">▶ RUN SIMULATION</button>
+            <button class="btn" onclick="resetWorkflow()">↺ RESET</button>
+            <button class="btn" onclick="showAllDetails()">⊞ VIEW ALL</button>
+        </div>
+        
+        <div class="workflow">
+            <div class="stage">
+                <div class="node uml-start" id="node1" onclick="showDetail('node1')">
+                    <div class="node-status status-pending"></div>
+                    <div class="node-title">LITERATURE</div>
+                    <div class="node-time">t = 0-5 min</div>
+                    <div class="arrow"></div>
+                </div>
+                <div class="annotation" style="top: -30px; left: 5px;">
+                    PDF: 2.3MB<br>
+                    OCR: 98%
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="node" id="node2" onclick="showDetail('node2')">
+                    <div class="node-status status-pending"></div>
+                    <div class="node-title">EQUATIONS</div>
+                    <div class="node-time">t = 3-5 min</div>
+                    <div class="arrow"></div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="node" id="node3" onclick="showDetail('node3')">
+                    <div class="node-status status-pending"></div>
+                    <div class="node-title">PIC DESIGN</div>
+                    <div class="node-time">t = 5-10 min</div>
+                    <div class="arrow"></div>
+                </div>
+                <div class="annotation" style="bottom: -30px; right: 5px;">
+                    3-MZI: 10×<br>
+                    φ ≤ 0.2 rad
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="node" id="node4" onclick="showDetail('node4')">
+                    <div class="node-status status-pending"></div>
+                    <div class="node-title">SIMULATE</div>
+                    <div class="node-time">t = 10-15 min</div>
+                    <div class="arrow"></div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="node" id="node5" onclick="showDetail('node5')">
+                    <div class="node-status status-pending"></div>
+                    <div class="node-title">OPTIMIZE</div>
+                    <div class="node-time">t = 15-30 min</div>
+                    <div class="feedback-loop"></div>
+                    <div class="feedback-label">7 iterations</div>
+                </div>
+                <div class="annotation" style="top: -30px; right: 5px;">
+                    H_ψ ≥ 0.5N²
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="node uml-start" id="node6" onclick="showDetail('node6')">
+                    <div class="node-status status-pending"></div>
+                    <div class="node-title">VALIDATE</div>
+                    <div class="node-time">t = 30-35 min</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="detail-panel" id="detailPanel">
+            <div class="detail-header" id="detailHeader">Select a node to view details</div>
+            <div id="detailContent"></div>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value" id="phaseReduction">10×</div>
+                <div class="metric-label">Phase Reduction</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="entropy">0.00N²</div>
+                <div class="metric-label">Information Entropy</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="iterations">0</div>
+                <div class="metric-label">Iterations</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="yield">0%</div>
+                <div class="metric-label">Manufacturing Yield</div>
+            </div>
+        </div>
+        
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-marker" id="tm0"></div>
+                <div class="timeline-label">0 min<br>Start</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-marker" id="tm1"></div>
+                <div class="timeline-label">5 min<br>Knowledge</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-marker" id="tm2"></div>
+                <div class="timeline-label">15 min<br>Initial</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-marker" id="tm3"></div>
+                <div class="timeline-label">30 min<br>Optimized</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-marker" id="tm4"></div>
+                <div class="timeline-label">35 min<br>Complete</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const nodeDetails = {
+            node1: {
+                title: "LITERATURE INGESTION",
+                status: "Extracting knowledge from PDF document",
+                inputs: {
+                    "Input File": "Hamerly2024_Photonics.pdf",
+                    "File Size": "2.3 MB",
+                    "Pages": "11",
+                    "Figures": "5"
+                },
+                process: {
+                    "OCR Engine": "Axiomatic Advanced OCR",
+                    "Confidence": "98%",
+                    "Text Extraction": "11,245 words",
+                    "Equations Found": "47 mathematical expressions"
+                },
+                outputs: {
+                    "Markdown File": "hamerly2024.md",
+                    "Extracted Equations": "3 key equations identified",
+                    "Knowledge Entities": "23 nodes created in graph"
+                },
+                visualization: `
+                    <canvas id="pdfViz" width="600" height="300"></canvas>
+                    <script>
+                        const pdfCanvas = document.getElementById('pdfViz');
+                        const pctx = pdfCanvas.getContext('2d');
+                        
+                        // Draw PDF page
+                        pctx.fillStyle = '#f0f0f0';
+                        pctx.fillRect(50, 30, 200, 240);
+                        pctx.strokeStyle = '#333';
+                        pctx.strokeRect(50, 30, 200, 240);
+                        
+                        // Text lines
+                        pctx.fillStyle = '#999';
+                        for(let i = 0; i < 10; i++) {
+                            pctx.fillRect(60, 45 + i*20, Math.random()*120 + 60, 2);
+                        }
+                        
+                        // Highlight equation
+                        pctx.fillStyle = 'rgba(76, 175, 80, 0.2)';
+                        pctx.fillRect(60, 120, 140, 25);
+                        pctx.fillStyle = '#333';
+                        pctx.font = '14px serif';
+                        pctx.fillText('s₃ = (s+i)/(1+is)', 70, 138);
+                        
+                        // Extract arrow
+                        pctx.strokeStyle = '#4caf50';
+                        pctx.lineWidth = 2;
+                        pctx.beginPath();
+                        pctx.moveTo(260, 150);
+                        pctx.lineTo(320, 150);
+                        pctx.stroke();
+                        
+                        // Draw arrow head
+                        pctx.beginPath();
+                        pctx.moveTo(315, 145);
+                        pctx.lineTo(320, 150);
+                        pctx.lineTo(315, 155);
+                        pctx.stroke();
+                        
+                        // Extracted data
+                        pctx.fillStyle = '#f9f9f9';
+                        pctx.fillRect(330, 60, 200, 180);
+                        pctx.strokeStyle = '#666';
+                        pctx.strokeRect(330, 60, 200, 180);
+                        
+                        pctx.fillStyle = '#333';
+                        pctx.font = '12px monospace';
+                        pctx.fillText('EXTRACTED DATA:', 340, 85);
+                        pctx.fillText('• Equations: 47', 340, 110);
+                        pctx.fillText('• Key formulas: 3', 340, 130);
+                        pctx.fillText('• Figures: 5', 340, 150);
+                        pctx.fillText('• Tables: 3', 340, 170);
+                        pctx.fillText('• References: 42', 340, 190);
+                        pctx.fillText('• OCR Confidence: 98%', 340, 210);
+                    <\/script>
+                `,
+                code: `# Axiomatic MCP Command
+axiomatic-documents:document_to_markdown \\
+    --file_path /path/to/hamerly2024.pdf \\
+    --output_format markdown \\
+    --extract_equations true`
+            },
+            node2: {
+                title: "EQUATION EXTRACTION",
+                status: "Parsing and validating mathematical expressions",
+                inputs: {
+                    "Source": "Extracted markdown content",
+                    "Total Equations": "47 expressions"
+                },
+                process: {
+                    "Parser": "SymPy + Custom LaTeX parser",
+                    "Validation": "Dimensional analysis",
+                    "Classification": "Transfer functions, constraints, bounds"
+                },
+                outputs: {
+                    "Möbius Transform": "s₃₋ₘᵢ = (s_MZI + i)/(1 + is_MZI)",
+                    "Phase Scaling": "⟨ψ⟩ ∝ O(1/√N)",
+                    "Information Bound": "H_ψ ≥ (N²/2)log(2πe³/²/N)",
+                    "Error Scaling": "ℰ_c ∝ √(log(N)/N)σ²"
+                },
+                visualization: `
+                    <canvas id="mathViz" width="600" height="350"></canvas>
+                    <script>
+                        const mathCanvas = document.getElementById('mathViz');
+                        const mctx = mathCanvas.getContext('2d');
+                        
+                        // Equation parsing tree
+                        mctx.strokeStyle = '#666';
+                        mctx.lineWidth = 1;
+                        
+                        // Root equation
+                        mctx.fillStyle = '#f0f0f0';
+                        mctx.fillRect(200, 30, 200, 40);
+                        mctx.strokeRect(200, 30, 200, 40);
+                        mctx.fillStyle = '#333';
+                        mctx.font = '16px serif';
+                        mctx.fillText('s₃ = (s+i)/(1+is)', 240, 55);
+                        
+                        // Tree branches
+                        mctx.beginPath();
+                        mctx.moveTo(300, 70);
+                        mctx.lineTo(150, 120);
+                        mctx.moveTo(300, 70);
+                        mctx.lineTo(300, 120);
+                        mctx.moveTo(300, 70);
+                        mctx.lineTo(450, 120);
+                        mctx.stroke();
+                        
+                        // Numerator node
+                        mctx.fillStyle = '#f9f9f9';
+                        mctx.fillRect(90, 120, 120, 35);
+                        mctx.strokeRect(90, 120, 120, 35);
+                        mctx.fillStyle = '#333';
+                        mctx.font = '14px serif';
+                        mctx.fillText('Numerator: s + i', 100, 142);
+                        
+                        // Denominator node
+                        mctx.fillStyle = '#f9f9f9';
+                        mctx.fillRect(240, 120, 120, 35);
+                        mctx.strokeRect(240, 120, 120, 35);
+                        mctx.fillText('Denominator: 1 + is', 245, 142);
+                        
+                        // Type node
+                        mctx.fillStyle = '#f9f9f9';
+                        mctx.fillRect(390, 120, 120, 35);
+                        mctx.strokeRect(390, 120, 120, 35);
+                        mctx.fillText('Type: Möbius', 410, 142);
+                        
+                        // Information bound plot
+                        mctx.strokeStyle = '#999';
+                        mctx.lineWidth = 1;
+                        mctx.strokeRect(80, 200, 440, 120);
+                        
+                        // Grid
+                        mctx.strokeStyle = '#eee';
+                        mctx.lineWidth = 0.5;
+                        for(let i = 1; i < 4; i++) {
+                            mctx.beginPath();
+                            mctx.moveTo(80, 200 + i*30);
+                            mctx.lineTo(520, 200 + i*30);
+                            mctx.stroke();
+                        }
+                        
+                        // Entropy curve
+                        mctx.strokeStyle = '#4caf50';
+                        mctx.lineWidth = 2;
+                        mctx.beginPath();
+                        for(let x = 0; x < 400; x++) {
+                            const n = x / 20;
+                            const h = 100 * Math.log(n + 1) / Math.log(20);
+                            if(x === 0) mctx.moveTo(100 + x, 310 - h);
+                            else mctx.lineTo(100 + x, 310 - h);
+                        }
+                        mctx.stroke();
+                        
+                        mctx.fillStyle = '#333';
+                        mctx.font = '12px sans-serif';
+                        mctx.fillText('H_ψ ≥ N²/2 log(2πe³/²/N)', 220, 340);
+                        mctx.fillText('N', 510, 330);
+                        mctx.fillText('H_ψ', 60, 210);
+                    <\/script>
+                `,
+                code: `# Extract and validate equations
+equations = axiomatic-equations:function_finder(
+    document=pdf_content,
+    task="Extract all phase scaling and transfer functions"
+)`
+            },
+            node3: {
+                title: "PIC DESIGN GENERATION",
+                status: "Creating photonic integrated circuit layout",
+                inputs: {
+                    "Architecture": "3-MZI topology",
+                    "Constraints": "φ_max ≤ 0.2 radians",
+                    "Target": "16×16 mesh"
+                },
+                process: {
+                    "PDK": "SiN 220nm process",
+                    "Design Rules": "DRC compliance checked",
+                    "Components": "768 MZIs, 256 crossings"
+                },
+                outputs: {
+                    "GDS File": "3mzi_mesh_16x16.gds",
+                    "Ring Radius": "5 μm",
+                    "Coupling Gap": "0.2 μm",
+                    "Total Area": "2.4 mm²"
+                },
+                visualization: `
+                    <canvas id="picViz" width="600" height="400"></canvas>
+                    <script>
+                        const picCanvas = document.getElementById('picViz');
+                        const pictx = picCanvas.getContext('2d');
+                        
+                        // Draw mesh grid background
+                        pictx.fillStyle = '#fafafa';
+                        pictx.fillRect(50, 50, 400, 300);
+                        
+                        // Grid lines
+                        pictx.strokeStyle = '#e0e0e0';
+                        pictx.lineWidth = 0.5;
+                        for(let i = 0; i <= 8; i++) {
+                            pictx.beginPath();
+                            pictx.moveTo(50 + i*50, 50);
+                            pictx.lineTo(50 + i*50, 350);
+                            pictx.moveTo(50, 50 + i*37.5);
+                            pictx.lineTo(450, 50 + i*37.5);
+                            pictx.stroke();
+                        }
+                        
+                        // Draw MZI units
+                        for(let row = 0; row < 4; row++) {
+                            for(let col = 0; col < 4; col++) {
+                                const x = 125 + col * 90;
+                                const y = 125 + row * 60;
+                                
+                                // Ring resonator
+                                pictx.strokeStyle = '#666';
+                                pictx.lineWidth = 2;
+                                pictx.beginPath();
+                                pictx.arc(x, y, 15, 0, Math.PI * 2);
+                                pictx.stroke();
+                                
+                                // Coupling regions
+                                pictx.fillStyle = '#999';
+                                pictx.fillRect(x - 20, y - 3, 6, 6);
+                                pictx.fillRect(x + 14, y - 3, 6, 6);
+                                
+                                // Phase shifter indicator
+                                pictx.strokeStyle = '#4caf50';
+                                pictx.lineWidth = 1.5;
+                                pictx.beginPath();
+                                pictx.arc(x, y - 20, 5, 0, Math.PI);
+                                pictx.stroke();
+                                
+                                // Connection lines
+                                if (col < 3) {
+                                    pictx.strokeStyle = '#999';
+                                    pictx.lineWidth = 1;
+                                    pictx.beginPath();
+                                    pictx.moveTo(x + 20, y);
+                                    pictx.lineTo(x + 70, y);
+                                    pictx.stroke();
+                                }
+                            }
+                        }
+                        
+                        // Labels and annotations
+                        pictx.fillStyle = '#333';
+                        pictx.font = '14px sans-serif';
+                        pictx.fillText('16×16 3-MZI Mesh Architecture', 470, 80);
+                        
+                        pictx.font = '12px sans-serif';
+                        pictx.fillText('• 768 MZI units', 470, 110);
+                        pictx.fillText('• φ_max = 0.2 rad', 470, 130);
+                        pictx.fillText('• 10× phase reduction', 470, 150);
+                        pictx.fillText('• Area: 2.4 mm²', 470, 170);
+                        
+                        // Scale bar
+                        pictx.strokeStyle = '#333';
+                        pictx.lineWidth = 1;
+                        pictx.beginPath();
+                        pictx.moveTo(470, 320);
+                        pictx.lineTo(550, 320);
+                        pictx.stroke();
+                        pictx.fillText('100 μm', 495, 340);
+                        
+                        // Highlight one unit
+                        pictx.strokeStyle = '#4caf50';
+                        pictx.lineWidth = 2;
+                        pictx.setLineDash([5, 3]);
+                        pictx.strokeRect(105, 105, 40, 40);
+                        pictx.setLineDash([]);
+                    <\/script>
+                `,
+                code: `# Generate PIC design
+design = axiomatic-pic:design_circuit(
+    query="3-MZI ring resonator mesh 16x16",
+    pdk_type="SiN_220nm",
+    constraints={"max_phase": 0.2}
+)`
+            },
+            node4: {
+                title: "SIMULATION",
+                status: "Computing transfer functions and performance metrics",
+                inputs: {
+                    "Design": "3mzi_mesh_16x16.gds",
+                    "Wavelength": "1550 nm",
+                    "Phase Noise": "σ = 0.01 rad"
+                },
+                process: {
+                    "Solver": "Finite difference time domain",
+                    "Mesh Points": "10⁶ points",
+                    "Computation Time": "4.3 minutes"
+                },
+                outputs: {
+                    "Transfer Function": "T(ω) computed",
+                    "Initial H_ψ": "0.42N² (BELOW TARGET)",
+                    "Phase Shifts Used": "0.1N² (10× reduction achieved)",
+                    "Crosstalk": "-32 dB"
+                },
+                visualization: `
+                    <canvas id="simViz" width="600" height="350"></canvas>
+                    <script>
+                        const simCanvas = document.getElementById('simViz');
+                        const sctx = simCanvas.getContext('2d');
+                        
+                        // Transfer function plot background
+                        sctx.fillStyle = '#fafafa';
+                        sctx.fillRect(60, 40, 480, 200);
+                        sctx.strokeStyle = '#333';
+                        sctx.strokeRect(60, 40, 480, 200);
+                        
+                        // Grid
+                        sctx.strokeStyle = '#e0e0e0';
+                        sctx.lineWidth = 0.5;
+                        for(let i = 1; i < 8; i++) {
+                            sctx.beginPath();
+                            sctx.moveTo(60 + i*60, 40);
+                            sctx.lineTo(60 + i*60, 240);
+                            sctx.stroke();
+                        }
+                        for(let i = 1; i < 4; i++) {
+                            sctx.beginPath();
+                            sctx.moveTo(60, 40 + i*50);
+                            sctx.lineTo(540, 40 + i*50);
+                            sctx.stroke();
+                        }
+                        
+                        // Transfer function curve
+                        sctx.strokeStyle = '#666';
+                        sctx.lineWidth = 2;
+                        sctx.beginPath();
+                        for(let x = 0; x < 480; x++) {
+                            const freq = x / 480 * 2 * Math.PI;
+                            const mag = Math.exp(-freq*freq/8) * (1 + 0.3*Math.sin(freq*4));
+                            const y = 240 - mag * 180;
+                            if(x === 0) sctx.moveTo(60 + x, y);
+                            else sctx.lineTo(60 + x, y);
+                        }
+                        sctx.stroke();
+                        
+                        // Target threshold line (green)
+                        sctx.strokeStyle = '#4caf50';
+                        sctx.lineWidth = 2;
+                        sctx.setLineDash([8, 4]);
+                        sctx.beginPath();
+                        sctx.moveTo(60, 100);
+                        sctx.lineTo(540, 100);
+                        sctx.stroke();
+                        
+                        // Current performance line (gray - below target)
+                        sctx.strokeStyle = '#999';
+                        sctx.lineWidth = 2;
+                        sctx.beginPath();
+                        sctx.moveTo(60, 130);
+                        sctx.lineTo(540, 130);
+                        sctx.stroke();
+                        sctx.setLineDash([]);
+                        
+                        // Labels
+                        sctx.fillStyle = '#333';
+                        sctx.font = '12px sans-serif';
+                        sctx.fillText('Frequency (THz)', 270, 265);
+                        sctx.save();
+                        sctx.translate(35, 140);
+                        sctx.rotate(-Math.PI/2);
+                        sctx.fillText('|T(ω)|', 0, 0);
+                        sctx.restore();
+                        
+                        // Legend
+                        sctx.fillStyle = '#666';
+                        sctx.fillRect(70, 250, 30, 2);
+                        sctx.fillStyle = '#333';
+                        sctx.font = '11px sans-serif';
+                        sctx.fillText('Transfer Function', 105, 255);
+                        
+                        sctx.strokeStyle = '#4caf50';
+                        sctx.setLineDash([8, 4]);
+                        sctx.beginPath();
+                        sctx.moveTo(200, 251);
+                        sctx.lineTo(230, 251);
+                        sctx.stroke();
+                        sctx.setLineDash([]);
+                        sctx.fillText('Target H_ψ = 0.5N²', 235, 255);
+                        
+                        sctx.fillStyle = '#999';
+                        sctx.fillRect(360, 250, 30, 2);
+                        sctx.fillText('Current H_ψ = 0.42N²', 395, 255);
+                        
+                        // Performance warning box
+                        sctx.fillStyle = 'rgba(150, 150, 150, 0.1)';
+                        sctx.fillRect(380, 60, 140, 50);
+                        sctx.strokeStyle = '#999';
+                        sctx.strokeRect(380, 60, 140, 50);
+                        sctx.fillStyle = '#333';
+                        sctx.font = '12px sans-serif';
+                        sctx.fillText('H_ψ = 0.42N²', 395, 80);
+                        sctx.font = '11px sans-serif';
+                        sctx.fillStyle = '#666';
+                        sctx.fillText('BELOW TARGET', 395, 100);
+                        
+                        // Phase distribution plot
+                        sctx.fillStyle = '#f9f9f9';
+                        sctx.fillRect(60, 280, 200, 60);
+                        sctx.strokeStyle = '#999';
+                        sctx.strokeRect(60, 280, 200, 60);
+                        
+                        // Histogram bars
+                        for(let i = 0; i < 10; i++) {
+                            const height = Math.random() * 30 + 10;
+                            sctx.fillStyle = '#ccc';
+                            sctx.fillRect(70 + i*18, 340 - height, 15, height);
+                        }
+                        sctx.fillStyle = '#333';
+                        sctx.font = '10px sans-serif';
+                        sctx.fillText('Phase Distribution', 120, 295);
+                    <\/script>
+                `,
+                code: `# Run simulation
+results = axiomatic-pic:simulate_circuit(
+    file_path="3mzi_mesh_16x16.py",
+    wavelength=1550e-9,
+    noise_model={"phase": 0.01}
+)`
+            },
+            node5: {
+                title: "OPTIMIZATION LOOP",
+                status: "Iterative gradient-based refinement",
+                inputs: {
+                    "Initial H_ψ": "0.42N²",
+                    "Target H_ψ": "≥ 0.5N²",
+                    "Error Signal": "ε = 0.08N²"
+                },
+                process: {
+                    "Algorithm": "Adam optimizer",
+                    "Learning Rate": "α = 0.01",
+                    "Iterations": "7 convergence loops",
+                    "Gradient Computation": "∇L/∇φ via backprop"
+                },
+                outputs: {
+                    "Final H_ψ": "0.45N² (TARGET ACHIEVED)",
+                    "Phase Updates": "Δφ = 0.015 rad average",
+                    "Convergence": "2.2× theoretical bound",
+                    "Total Time": "15 minutes"
+                },
+                visualization: `
+                    <canvas id="optViz" width="600" height="400"></canvas>
+                    <script>
+                        const optCanvas = document.getElementById('optViz');
+                        const octx = optCanvas.getContext('2d');
+                        
+                        // 2D Contour plot for optimization landscape
+                        octx.fillStyle = '#fafafa';
+                        octx.fillRect(50, 50, 350, 300);
+                        
+                        // Draw contour levels
+                        for(let i = 10; i > 0; i--) {
+                            const gray = 240 - i * 8;
+                            octx.fillStyle = 'rgb(' + gray + ',' + gray + ',' + gray + ')';
+                            octx.beginPath();
+                            octx.arc(225, 200, i * 15, 0, Math.PI * 2);
+                            octx.fill();
+                        }
+                        
+                        // Contour lines
+                        octx.strokeStyle = '#999';
+                        octx.lineWidth = 0.5;
+                        for(let i = 1; i < 10; i++) {
+                            octx.beginPath();
+                            octx.arc(225, 200, i * 15, 0, Math.PI * 2);
+                            octx.stroke();
+                        }
+                        
+                        // Gradient descent trajectory
+                        const path = [
+                            {x: 100, y: 280},
+                            {x: 130, y: 260},
+                            {x: 160, y: 240},
+                            {x: 185, y: 220},
+                            {x: 205, y: 205},
+                            {x: 218, y: 198},
+                            {x: 225, y: 200}
+                        ];
+                        
+                        // Draw path
+                        octx.strokeStyle = '#333';
+                        octx.lineWidth = 3;
+                        octx.beginPath();
+                        path.forEach((p, i) => {
+                            if(i === 0) octx.moveTo(p.x, p.y);
+                            else octx.lineTo(p.x, p.y);
+                        });
+                        octx.stroke();
+                        
+                        // Draw iteration points
+                        path.forEach((p, i) => {
+                            octx.fillStyle = i === path.length - 1 ? '#4caf50' : '#666';
+                            octx.beginPath();
+                            octx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                            octx.fill();
+                            
+                            octx.fillStyle = '#333';
+                            octx.font = '10px sans-serif';
+                            octx.fillText(i.toString(), p.x + 8, p.y - 8);
+                        });
+                        
+                        // Draw gradient vectors
+                        octx.strokeStyle = '#999';
+                        octx.lineWidth = 1;
+                        for(let i = 0; i < path.length - 1; i++) {
+                            const dx = path[i+1].x - path[i].x;
+                            const dy = path[i+1].y - path[i].y;
+                            const len = Math.sqrt(dx*dx + dy*dy);
+                            
+                            octx.save();
+                            octx.translate(path[i].x, path[i].y);
+                            octx.rotate(Math.atan2(dy, dx));
+                            
+                            octx.beginPath();
+                            octx.moveTo(0, 0);
+                            octx.lineTo(len * 0.6, 0);
+                            octx.moveTo(len * 0.6 - 4, -3);
+                            octx.lineTo(len * 0.6, 0);
+                            octx.lineTo(len * 0.6 - 4, 3);
+                            octx.stroke();
+                            
+                            octx.restore();
+                        }
+                        
+                        // Axis labels
+                        octx.fillStyle = '#333';
+                        octx.font = '12px sans-serif';
+                        octx.fillText('Phase φ₁', 380, 355);
+                        octx.save();
+                        octx.translate(30, 100);
+                        octx.rotate(-Math.PI/2);
+                        octx.fillText('Phase φ₂', 0, 0);
+                        octx.restore();
+                        
+                        // Optimum label
+                        octx.fillStyle = '#4caf50';
+                        octx.font = '11px sans-serif';
+                        octx.fillText('Global Optimum', 190, 185);
+                        octx.fillText('H_ψ = 0.45N²', 195, 230);
+                        
+                        // Convergence plot
+                        octx.fillStyle = '#fff';
+                        octx.fillRect(430, 80, 150, 120);
+                        octx.strokeStyle = '#666';
+                        octx.strokeRect(430, 80, 150, 120);
+                        
+                        // Loss curve
+                        const losses = [0.08, 0.06, 0.045, 0.03, 0.02, 0.008, 0.003];
+                        octx.strokeStyle = '#333';
+                        octx.lineWidth = 2;
+                        octx.beginPath();
+                        losses.forEach((l, i) => {
+                            const x = 440 + i * 20;
+                            const y = 190 - l * 1000;
+                            if(i === 0) octx.moveTo(x, y);
+                            else octx.lineTo(x, y);
+                            
+                            // Plot points
+                            octx.fillStyle = '#666';
+                            octx.beginPath();
+                            octx.arc(x, y, 3, 0, Math.PI * 2);
+                            octx.fill();
+                        });
+                        octx.stroke();
+                        
+                        octx.fillStyle = '#333';
+                        octx.font = '10px sans-serif';
+                        octx.fillText('Loss Convergence', 465, 95);
+                        octx.fillText('Iteration', 490, 215);
+                        
+                        // Learning rate schedule
+                        octx.fillStyle = '#f9f9f9';
+                        octx.fillRect(430, 230, 150, 80);
+                        octx.strokeStyle = '#999';
+                        octx.strokeRect(430, 230, 150, 80);
+                        
+                        octx.strokeStyle = '#666';
+                        octx.lineWidth = 1.5;
+                        octx.beginPath();
+                        for(let x = 0; x < 140; x++) {
+                            const lr = 0.01 * Math.exp(-x/50);
+                            const y = 300 - lr * 5000;
+                            if(x === 0) octx.moveTo(435 + x, y);
+                            else octx.lineTo(435 + x, y);
+                        }
+                        octx.stroke();
+                        
+                        octx.fillStyle = '#333';
+                        octx.font = '10px sans-serif';
+                        octx.fillText('Learning Rate α(t)', 470, 245);
+                    <\/script>
+                `,
+                code: `# Digital twin optimization
+optimized = axiomatic-dt-optimizer:optimize(
+    model="3mzi_transfer_function",
+    target_entropy=0.5*N**2,
+    max_iterations=10,
+    learning_rate=0.01
+)`
+            },
+            node6: {
+                title: "VALIDATION",
+                status: "Manufacturing readiness assessment",
+                inputs: {
+                    "Optimized Design": "3mzi_optimized.gds",
+                    "Monte Carlo Samples": "1000",
+                    "Process Variations": "±5% dimensional"
+                },
+                process: {
+                    "Statistical Analysis": "Full factorial DOE",
+                    "Yield Calculation": "Pass/fail criteria",
+                    "Robustness Check": "Corner analysis"
+                },
+                outputs: {
+                    "Manufacturing Yield": "99%",
+                    "6-Sigma Performance": "Confirmed",
+                    "Provenance Graph": "37 nodes, 84 edges",
+                    "Documentation": "Complete traceability"
+                },
+                visualization: `
+                    <canvas id="valViz" width="600" height="350"></canvas>
+                    <script>
+                        const valCanvas = document.getElementById('valViz');
+                        const vctx = valCanvas.getContext('2d');
+                        
+                        // Histogram background
+                        vctx.fillStyle = '#fafafa';
+                        vctx.fillRect(60, 40, 280, 200);
+                        vctx.strokeStyle = '#666';
+                        vctx.strokeRect(60, 40, 280, 200);
+                        
+                        // Generate normal distribution data
+                        const mean = 0.45;
+                        const std = 0.02;
+                        const bins = 25;
+                        const samples = [];
+                        
+                        for(let i = 0; i < 1000; i++) {
+                            const u1 = Math.random();
+                            const u2 = Math.random();
+                            const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+                            samples.push(mean + z0 * std);
+                        }
+                        
+                        // Create histogram
+                        const hist = new Array(bins).fill(0);
+                        samples.forEach(s => {
+                            const bin = Math.floor((s - 0.35) / 0.025);
+                            if(bin >= 0 && bin < bins) hist[bin]++;
+                        });
+                        
+                        // Draw histogram bars
+                        const maxCount = Math.max(...hist);
+                        hist.forEach((count, i) => {
+                            const height = (count / maxCount) * 160;
+                            const x = 65 + i * 10;
+                            
+                            // Color bars based on pass/fail threshold
+                            vctx.fillStyle = (i >= 8 && i <= 20) ? '#4caf50' : '#ccc';
+                            vctx.fillRect(x, 240 - height, 9, height);
+                        });
+                        
+                        // Target threshold line
+                        vctx.strokeStyle = '#4caf50';
+                        vctx.lineWidth = 2;
+                        vctx.setLineDash([8, 4]);
+                        vctx.beginPath();
+                        vctx.moveTo(145, 40);
+                        vctx.lineTo(145, 240);
+                        vctx.stroke();
+                        vctx.setLineDash([]);
+                        
+                        // Normal distribution curve overlay
+                        vctx.strokeStyle = '#666';
+                        vctx.lineWidth = 2;
+                        vctx.beginPath();
+                        for(let x = 0; x < 280; x++) {
+                            const val = 0.35 + x * 0.3/280;
+                            const prob = Math.exp(-0.5 * Math.pow((val - mean)/std, 2)) / (std * Math.sqrt(2 * Math.PI));
+                            const y = 240 - prob * 5000;
+                            if(x === 0) vctx.moveTo(60 + x, y);
+                            else vctx.lineTo(60 + x, y);
+                        }
+                        vctx.stroke();
+                        
+                        // Labels
+                        vctx.fillStyle = '#333';
+                        vctx.font = '12px sans-serif';
+                        vctx.fillText('H_ψ Distribution (N=1000)', 140, 260);
+                        vctx.font = '10px sans-serif';
+                        vctx.fillText('0.35', 60, 255);
+                        vctx.fillText('0.60', 320, 255);
+                        vctx.fillText('Target', 150, 50);
+                        
+                        // Yield statistics box
+                        vctx.fillStyle = '#f0f0f0';
+                        vctx.fillRect(380, 60, 180, 100);
+                        vctx.strokeStyle = '#4caf50';
+                        vctx.strokeRect(380, 60, 180, 100);
+                        
+                        vctx.fillStyle = '#333';
+                        vctx.font = '16px sans-serif';
+                        vctx.fillText('Yield: 99%', 410, 90);
+                        vctx.font = '12px sans-serif';
+                        vctx.fillText('μ = 0.45N²', 410, 115);
+                        vctx.fillText('σ = 0.02N²', 410, 135);
+                        vctx.fillText('Cpk = 1.67 (6σ)', 410, 155);
+                        
+                        // Neo4j provenance graph
+                        vctx.strokeStyle = '#999';
+                        vctx.lineWidth = 1;
+                        
+                        // Graph nodes
+                        const nodes = [
+                            {x: 420, y: 220, label: 'PDF', color: '#f0f0f0'},
+                            {x: 480, y: 200, label: 'Eqs', color: '#f0f0f0'},
+                            {x: 540, y: 220, label: 'PIC', color: '#f0f0f0'},
+                            {x: 520, y: 280, label: 'Opt', color: '#f0f0f0'},
+                            {x: 440, y: 280, label: 'Val', color: '#4caf50'}
+                        ];
+                        
+                        // Draw edges
+                        vctx.beginPath();
+                        vctx.moveTo(420, 220);
+                        vctx.lineTo(480, 200);
+                        vctx.lineTo(540, 220);
+                        vctx.lineTo(520, 280);
+                        vctx.lineTo(440, 280);
+                        vctx.lineTo(420, 220);
+                        vctx.stroke();
+                        
+                        // Draw nodes
+                        nodes.forEach(n => {
+                            vctx.fillStyle = n.color;
+                            vctx.beginPath();
+                            vctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
+                            vctx.fill();
+                            vctx.strokeStyle = '#666';
+                            vctx.stroke();
+                            
+                            vctx.fillStyle = '#333';
+                            vctx.font = '10px sans-serif';
+                            vctx.fillText(n.label, n.x - 12, n.y + 3);
+                        });
+                        
+                        vctx.fillStyle = '#666';
+                        vctx.font = '11px sans-serif';
+                        vctx.fillText('Provenance Graph', 445, 310);
+                        vctx.font = '10px sans-serif';
+                        vctx.fillText('37 nodes, 84 edges', 445, 325);
+                    <\/script>
+                `,
+                code: `# Validation and documentation
+neo4j-memory:write_neo4j_cypher(
+    query=\"\"\"
+    CREATE (d:Design {id: '3mzi_final', yield: 0.99})
+    CREATE (p:Paper {id: 'hamerly2024'})
+    CREATE (d)-[:DERIVED_FROM]->(p)
+    \"\"\"
+)`
+            }
+        };
+        
+        let currentNode = null;
+        let simulationStep = 0;
+        let simulationInterval = null;
+        
+        function showDetail(nodeId) {
+            const panel = document.getElementById('detailPanel');
+            const header = document.getElementById('detailHeader');
+            const content = document.getElementById('detailContent');
+            const details = nodeDetails[nodeId];
+            
+            // Update active node styling
+            document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+            document.getElementById(nodeId).classList.add('active');
+            
+            panel.classList.add('active');
+            header.textContent = details.title;
+            
+            let html = `
+                <div class="visualization-panel">
+                    ${details.visualization}
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-content">${details.status}</div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">Inputs</div>
+                    <div class="detail-content">
+                        ${Object.entries(details.inputs).map(([k, v]) => 
+                            `<div><strong>${k}:</strong> ${v}</div>`
+                        ).join('')}
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">Process</div>
+                    <div class="detail-content">
+                        ${Object.entries(details.process).map(([k, v]) => 
+                            `<div><strong>${k}:</strong> ${v}</div>`
+                        ).join('')}
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">Outputs</div>
+                    <div class="detail-content">
+                        ${Object.entries(details.outputs).map(([k, v]) => 
+                            `<div><strong>${k}:</strong> ${v}</div>`
+                        ).join('')}
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">Code Example</div>
+                    <div class="code-block">${details.code}</div>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            
+            // Execute embedded visualization scripts
+            const scripts = content.getElementsByTagName('script');
+            for(let script of scripts) {
+                eval(script.innerHTML);
+            }
+            
+            currentNode = nodeId;
+        }
+        
+        function runSimulation() {
+            simulationStep = 0;
+            const nodes = ['node1', 'node2', 'node3', 'node4', 'node5', 'node6'];
+            const timelineMarkers = ['tm0', 'tm1', 'tm2', 'tm3', 'tm4'];
+            
+            // Reset all nodes and timeline
+            nodes.forEach(nodeId => {
+                const status = document.querySelector(`#${nodeId} .node-status`);
+                status.className = 'node-status status-pending';
+                document.getElementById(nodeId).classList.remove('active');
+            });
+            
+            timelineMarkers.forEach(tm => {
+                document.getElementById(tm).classList.remove('active');
+            });
+            
+            // Clear any existing interval
+            if (simulationInterval) clearInterval(simulationInterval);
+            
+            // Animate through the pipeline
+            simulationInterval = setInterval(() => {
+                if (simulationStep < nodes.length) {
+                    const nodeId = nodes[simulationStep];
+                    const status = document.querySelector(`#${nodeId} .node-status`);
+                    
+                    // Set previous nodes to success
+                    if (simulationStep > 0) {
+                        const prevNodeId = nodes[simulationStep - 1];
+                        const prevStatus = document.querySelector(`#${prevNodeId} .node-status`);
+                        prevStatus.className = 'node-status status-success';
+                        document.getElementById(prevNodeId).classList.remove('active');
+                    }
+                    
+                    // Set current node to running
+                    status.className = 'node-status status-running';
+                    document.getElementById(nodeId).classList.add('active');
+                    showDetail(nodeId);
+                    
+                    // Update metrics and timeline
+                    updateMetrics(simulationStep);
+                    updateTimeline(simulationStep);
+                    
+                    simulationStep++;
+                } else {
+                    // Set last node to success
+                    const lastNodeId = nodes[nodes.length - 1];
+                    const lastStatus = document.querySelector(`#${lastNodeId} .node-status`);
+                    lastStatus.className = 'node-status status-success';
+                    document.getElementById(lastNodeId).classList.remove('active');
+                    
+                    // Mark timeline complete
+                    document.getElementById('tm4').classList.add('active');
+                    
+                    clearInterval(simulationInterval);
+                }
+            }, 3000);
+        }
+        
+        function updateMetrics(step) {
+            const entropyEl = document.getElementById('entropy');
+            const iterationsEl = document.getElementById('iterations');
+            const yieldEl = document.getElementById('yield');
+            
+            // Remove previous color classes
+            entropyEl.classList.remove('success', 'error');
+            
+            switch(step) {
+                case 3:
+                    entropyEl.textContent = '0.42N²';
+                    entropyEl.classList.add('error');
+                    break;
+                case 4:
+                    iterationsEl.textContent = '7';
+                    entropyEl.textContent = '0.45N²';
+                    entropyEl.classList.add('success');
+                    break;
+                case 5:
+                    yieldEl.textContent = '99%';
+                    break;
+            }
+        }
+        
+        function updateTimeline(step) {
+            const markers = {
+                0: 'tm0',
+                1: 'tm1',
+                3: 'tm2',
+                4: 'tm3',
+                5: 'tm4'
+            };
+            
+            if (markers[step]) {
+                document.getElementById(markers[step]).classList.add('active');
+            }
+        }
+        
+        function resetWorkflow() {
+            // Clear interval if running
+            if (simulationInterval) clearInterval(simulationInterval);
+            
+            // Reset all nodes
+            document.querySelectorAll('.node-status').forEach(status => {
+                status.className = 'node-status status-pending';
+            });
+            document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+            
+            // Reset detail panel
+            document.getElementById('detailPanel').classList.remove('active');
+            
+            // Reset metrics
+            document.getElementById('entropy').textContent = '0.00N²';
+            document.getElementById('entropy').classList.remove('success', 'error');
+            document.getElementById('iterations').textContent = '0';
+            document.getElementById('yield').textContent = '0%';
+            
+            // Reset timeline
+            document.querySelectorAll('.timeline-marker').forEach(m => m.classList.remove('active'));
+        }
+        
+        function showAllDetails() {
+            const nodes = ['node1', 'node2', 'node3', 'node4', 'node5', 'node6'];
+            let allDetailsHtml = '<h2 style="color: #333; margin-bottom: 20px;">Complete Pipeline Overview</h2>';
+            
+            nodes.forEach(nodeId => {
+                const details = nodeDetails[nodeId];
+                allDetailsHtml += `
+                    <div style="margin: 20px 0; padding: 15px; background: #fafafa; border-left: 4px solid #666;">
+                        <h3 style="color: #333;">${details.title}</h3>
+                        <p style="color: #666; margin: 10px 0;">${details.status}</p>
+                        <div style="background: #2d2d2d; color: #f8f8f2; padding: 10px; margin-top: 10px;">
+                            <pre style="margin: 0; font-size: 11px;">${details.code}</pre>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('detailContent').innerHTML = allDetailsHtml;
+            document.getElementById('detailHeader').textContent = 'COMPLETE WORKFLOW DETAILS';
+            document.getElementById('detailPanel').classList.add('active');
+        }
+    </script>
+</body>
+</html>
