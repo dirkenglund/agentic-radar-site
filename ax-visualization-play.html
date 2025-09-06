@@ -213,39 +213,7 @@
             overflow-x: auto;
         }
         
-        .metrics {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            padding: 15px;
-            background: #f5f5f5;
-            border: 1px solid #ccc;
-        }
-        
-        .metric {
-            text-align: center;
-        }
-        
-        .metric-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            transition: color 0.5s;
-        }
-        
-        .metric-value.success {
-            color: #4caf50;
-        }
-        
-        .metric-value.error {
-            color: #666;
-        }
-        
-        .metric-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
+        /* metrics section removed */
         
         .feedback-loop {
             position: absolute;
@@ -454,24 +422,7 @@
             <div id="detailContent"></div>
         </div>
         
-        <div class="metrics">
-            <div class="metric">
-                <div class="metric-value" id="phaseReduction">10×</div>
-                <div class="metric-label">Phase Reduction</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value" id="entropy">0.00N²</div>
-                <div class="metric-label">Information Entropy</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value" id="iterations">0</div>
-                <div class="metric-label">Iterations</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value" id="yield">0%</div>
-                <div class="metric-label">Manufacturing Yield</div>
-            </div>
-        </div>
+        <!-- metrics section removed per request -->
         
         <div class="timeline">
             <div class="timeline-item">
@@ -1397,8 +1348,7 @@ neo4j-memory:write_neo4j_cypher(
                     document.getElementById(nodeId).classList.add('active');
                     showDetail(nodeId);
                     
-                    // Update metrics and timeline
-                    updateMetrics(simulationStep);
+                    // Update timeline
                     updateTimeline(simulationStep);
                     
                     simulationStep++;
@@ -1417,29 +1367,7 @@ neo4j-memory:write_neo4j_cypher(
             }, 3000);
         }
         
-        function updateMetrics(step) {
-            const entropyEl = document.getElementById('entropy');
-            const iterationsEl = document.getElementById('iterations');
-            const yieldEl = document.getElementById('yield');
-            
-            // Remove previous color classes
-            entropyEl.classList.remove('success', 'error');
-            
-            switch(step) {
-                case 3:
-                    entropyEl.textContent = '0.42N²';
-                    entropyEl.classList.add('error');
-                    break;
-                case 4:
-                    iterationsEl.textContent = '7';
-                    entropyEl.textContent = '0.45N²';
-                    entropyEl.classList.add('success');
-                    break;
-                case 5:
-                    yieldEl.textContent = '99%';
-                    break;
-            }
-        }
+        // metrics logic removed
         
         function updateTimeline(step) {
             const markers = {
@@ -1468,11 +1396,7 @@ neo4j-memory:write_neo4j_cypher(
             // Reset detail panel
             document.getElementById('detailPanel').classList.remove('active');
             
-            // Reset metrics
-            document.getElementById('entropy').textContent = '0.00N²';
-            document.getElementById('entropy').classList.remove('success', 'error');
-            document.getElementById('iterations').textContent = '0';
-            document.getElementById('yield').textContent = '0%';
+            // No metrics to reset
             
             // Reset timeline
             document.querySelectorAll('.timeline-marker').forEach(m => m.classList.remove('active'));
