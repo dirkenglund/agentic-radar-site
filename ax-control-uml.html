@@ -9,6 +9,12 @@
     body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
     .title-banner { background: #2e7d32; color: #fff; border: 2px solid #1b5e20; padding: 12px 16px; text-align: center; font-size: 20px; }
     .wrap { max-width: 1200px; margin: 16px auto; background: #fff; border: 2px solid #333; padding: 16px; }
+    .layout { display: flex; gap: 16px; align-items: flex-start; }
+    .left { flex: 1 1 auto; min-width: 0; }
+    .right { width: 380px; border: 1px solid #ddd; background: #fafafa; padding: 12px; display: none; }
+    .right.active { display: block; border: 2px solid #2e7d32; }
+    .info-title { font-weight: bold; font-size: 16px; color: #333; margin-bottom: 8px; }
+    .info-block { background: #fff; border-left: 3px solid #2e7d32; padding: 8px; margin: 8px 0; font-family: Menlo, Consolas, monospace; font-size: 12px; }
     .note { font-size: 12px; color: #555; margin: 8px 0 0 0; }
     .mermaid { background: #fff; }
   </style>
@@ -19,7 +25,9 @@
 <body>
   <div class="title-banner">Axiomatic Workflow Replay — Control-Theory UML</div>
   <div class="wrap">
-    <div class="mermaid">
+    <div class="layout">
+      <div class="left">
+        <div class="mermaid">
 flowchart LR
   %% Minimal, version-compatible syntax
   R(["r(t) Reference"]) 
@@ -46,9 +54,95 @@ flowchart LR
   N -.-> PLANT
   CONTROLLER -.-> STORE
   SENS -.-> STORE
+
+  %% Click bindings for interactive details panel
+  click DMD call showInfo "Documents tool"
+  click EQS call showInfo "Equations tool"
+  click PLT call showInfo "Plots tool"
+  click PIC call showInfo "PIC tool"
+  click PLANT call showInfo "Plant"
+  click SENS call showInfo "Sensor"
+  click STORE call showInfo "Provenance"
+        </div>
+      </div>
+      <div id="infoPanel" class="right">
+        <div id="infoTitle" class="info-title">Details</div>
+        <div id="infoBody"></div>
+      </div>
     </div>
     <p class="note">Blocks show Axiomatic MCP calls and control-loop structure. Summing junction E computes e(t)=r(t)-y(t). Negative feedback indicated by dashed line.</p>
   </div>
+
+  <script>
+    const infoData = {
+      DMD: {
+        title: 'Documents: document_to_markdown',
+        inputs: {
+          file_path: '/docs/axiomatic_run/paper.pdf',
+          output_format: 'markdown',
+          extract_equations: true
+        },
+        outputs: {
+          markdown: 'paper.md',
+          equations_found: 47
+        }
+      },
+      EQS: {
+        title: 'Equations: compose_expression',
+        inputs: { task: 'extract phase scaling and transfer functions' },
+        outputs: { key_equations: 3, classes: 'transfer, constraints, bounds' }
+      },
+      PLT: {
+        title: 'Plots: extract_numerical_series_points',
+        inputs: { plot_path: '/docs/axiomatic_run/figure.png' },
+        outputs: { series_points: 128 }
+      },
+      PIC: {
+        title: 'PIC: design_circuit',
+        inputs: { query: '3-MZI ring resonator mesh 16x16', constraints: '{max_phase:0.2}' },
+        outputs: { gds: '3mzi_mesh_16x16.gds' }
+      },
+      PLANT: {
+        title: 'Photonic Plant: simulate_circuit',
+        inputs: { file: '3mzi_mesh_16x16.gds', lambda_nm: 1550, noise: 'phase=0.01' },
+        outputs: { T_omega: 'computed', H_psi: '0.42 N^2' }
+      },
+      SENS: {
+        title: 'Sensor / Extractor',
+        inputs: { signals: 'y(t)' },
+        outputs: { metrics: 'H_psi, fit T(ω)' }
+      },
+      STORE: {
+        title: 'Neo4j Provenance',
+        inputs: { nodes: 37, edges: 84 },
+        outputs: { url: 'neo4j://graph' }
+      }
+    };
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+    }
+
+    window.showInfo = function(nodeId){
+      const d = infoData[nodeId];
+      const panel = document.getElementById('infoPanel');
+      const title = document.getElementById('infoTitle');
+      const body = document.getElementById('infoBody');
+      if(!d){ panel.classList.add('active'); title.textContent='Details'; body.textContent='(no data)'; return; }
+      title.textContent = d.title;
+      let html = '';
+      if(d.inputs){
+        html += '<div class="info-block"><strong>Inputs</strong><br/>' +
+          Object.entries(d.inputs).map(([k,v])=>`${escapeHtml(k)}: ${escapeHtml(v)}`).join('<br/>') + '</div>';
+      }
+      if(d.outputs){
+        html += '<div class="info-block"><strong>Outputs</strong><br/>' +
+          Object.entries(d.outputs).map(([k,v])=>`${escapeHtml(k)}: ${escapeHtml(v)}`).join('<br/>') + '</div>';
+      }
+      body.innerHTML = html;
+      panel.classList.add('active');
+    }
+  </script>
 </body>
 </html>
 
